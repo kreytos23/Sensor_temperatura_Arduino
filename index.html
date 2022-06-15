@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KyZXEAg3QhqLMpG8r+8fhAXLRk2vvoC2f3B09zVXn8CA5QIVfZOJ3BCsw2P0p/We" crossorigin="anonymous">
+        <link rel="stylesheet" href="index.css">
+        <title>Medicion Temperatura</title>
+    </head>
+    <body>
+        <header class="mb-5">
+            <nav id="header" class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+                <div class="container">
+                    <a class="navbar-brand navTitle" href="#">
+                        <img src="./cheems2.png" alt="platzi-logo">
+                        <h4 class="ms-4">Equipo "Les Lolis"</h4>
+                    </a>
+                    <h3 class="ms-auto text-white">Práctica 4 "Remote monitoring web app with Node"</h3>
+                </div>
+            </nav>
+        </header>
+        <div class="container text-white">Lorem ipsum dolor sit amet consectetur adipisicing elit. Repellendus saepe optio hic a nulla distinctio eos veniam doloribus illum quia accusantium atque sequi vitae, sunt consequuntur aspernatur magnam necessitatibus fugiat!</div>
+        <div class="container-fluid my-5">
+            <h1 style = "text-align: center" >Información sensor de temperatura</h1>
+            <div style= "margin: 0 auto; border: solid; width: 70%">
+                <canvas id="myCanvas"></canvas>
+            </div>
+            <div id="demo"></div>
+        </div>
+
+        <section class="place-time my-4" id="place-time">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-12 col-lg-6 px-0">
+                        <img src="./electronica.jpg" alt="Honolulu Image">
+                    </div>
+                    <div class="col-12 col-lg-6 ps-3 align-self-center">
+                        <h2 class="mt-3">Funcionamiento de Gráfica</h2>
+                        <p>
+                            En esta gráfica se muestran las temperaturas Obtenidas
+                            mediante un sensor de temperatura, enviadas a través de una
+                            comunicación serial y un servidor hecho con Express.js
+                        </p>
+                        <p>
+                            En el eje X se muestra la temperatura obtenida y en el eje y
+                            se muestra el numero de ocasiones en las que se registro ese nivel de temperatura.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-U1DAWAznBHeqEIlVSCgzq+c9gqGAJn5c/t99JyeKa9xxaYpSvHU5awsuZVVFIhvj" crossorigin="anonymous"></script>
+    </body>
+</html>
+
+<script>
+    let temperaturas = [];
+    let numRegistros = [];
+    const socket = io('http://localhost:3000')
+    let counter = 0;
+
+    socket.on('dataSending', function(dataSerial){
+        //Se obtienen los datos 
+        var datos = dataSerial.toString('utf8').trim();
+        
+        console.log(temperaturas);
+        
+        var indexTemp = 0;
+        if(temperaturas.indexOf(datos) == -1 && datos != '' && dataSerial < 30 && dataSerial > 18){
+            temperaturas.push(datos);
+            numRegistros.push(1);
+            myChart.data.labels.push(datos);
+            myChart.data.datasets.forEach(dataset => {
+                dataset.data.push(1);
+            });
+        }else{
+            indexTemp = temperaturas.lastIndexOf(datos);
+            myChart.data.datasets.forEach(dataset => {
+                dataset.data[indexTemp]++;
+            });
+        }      
+        myChart.update();
+
+        //$('#demo').append(dataSerial+'<br>')
+    });
+
+    const ctx = document.getElementById('myCanvas').getContext('2d');
+
+    const myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [{
+                label: "Temperaturas Obtenidas",
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                    'rgba(255, 205, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(201, 203, 207, 0.2)'
+                    ],
+                borderColor: [
+                    'rgba(255, 99, 132, 0.5)',
+                    'rgba(255, 159, 64, 0.5)',
+                    'rgba(255, 205, 86, 0.5)',
+                    'rgba(75, 192, 192, 0.5)',
+                    'rgba(54, 162, 235, 0.5)',
+                    'rgba(153, 102, 255, 0.5)',
+                    'rgba(201, 203, 207, 0.5)'
+                    ],
+                data: [],
+                scaleLabel: "No. Temperaturas Registradas",
+                borderWidth: 3,
+                borderRadius: 5,
+                borderSkipped: false,
+            }],
+            options: {
+            legend: {
+                display: true,
+                text: "Temperaturas"
+            }
+        }
+        }
+        
+    });
+</script>
